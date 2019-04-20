@@ -1,40 +1,57 @@
 // This sample shows adding an action to an [AppBar] that opens a shopping cart.
 
+import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_playground/data/user_repository.dart';
+import 'package:flutter_playground/ui/login/login_bloc.dart';
+import 'package:flutter_playground/ui/login/login_screen.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  BlocSupervisor().delegate = SimpleBlocDelegate();
+  runApp(MyApp());
+}
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class SimpleBlocDelegate extends BlocDelegate {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Code Sample for material.AppBar.actions',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyStatelessWidget(),
-    );
+  void onTransition(Transition transition) {
+    super.onTransition(transition);
+    print(transition);
+  }
+
+  @override
+  void onError(Object error, StackTrace stacktrace) {
+    super.onError(error, stacktrace);
+    print(error);
   }
 }
 
-class MyStatelessWidget extends StatelessWidget {
-  MyStatelessWidget({Key key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  UserRepository _userRepository;
+  LoginBloc _loginBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _userRepository = UserRepository(FirebaseAuth.instance);
+    _loginBloc = LoginBloc(_userRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Hello World'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.shopping_cart),
-            tooltip: 'Open shopping cart',
-            onPressed: () {
-              // ...
-            },
-          ),
-        ],
+    return BlocProviderTree(
+      blocProviders: [
+        BlocProvider<LoginBloc>(bloc: _loginBloc),
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        home: LoginScreen(),
       ),
     );
   }
